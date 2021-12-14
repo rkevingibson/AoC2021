@@ -66,16 +66,16 @@ fn part2(input: &[Line]) -> i32 {
     let mut counts = HashMap::<(i32, i32), i32>::new();
 
     for line in input {
-            let step_x = (line.end.0 - line.start.0).signum();
-            let step_y = (line.end.1 - line.start.1).signum();
-            let mut p = line.start;
-            while p != line.end {
-                *counts.entry(p).or_insert(0) += 1;
-                p.0 += step_x;
-                p.1 += step_y;
-            }
-            // We need to add the end point since we stopped beforehand.
-            *counts.entry(line.end).or_insert(0) += 1;
+        let step_x = (line.end.0 - line.start.0).signum();
+        let step_y = (line.end.1 - line.start.1).signum();
+        let mut p = line.start;
+        while p != line.end {
+            *counts.entry(p).or_insert(0) += 1;
+            p.0 += step_x;
+            p.1 += step_y;
+        }
+        // We need to add the end point since we stopped beforehand.
+        *counts.entry(line.end).or_insert(0) += 1;
     }
 
     counts.values().fold(0, |acc, &el| {
