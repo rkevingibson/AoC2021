@@ -66,23 +66,16 @@ fn part2(input: &[Line]) -> i32 {
     let mut counts = HashMap::<(i32, i32), i32>::new();
 
     for line in input {
-        if line.start.0 == line.end.0 {
-            // Vertical line
-            let min_y = line.start.1.min(line.end.1);
-            let max_y = line.start.1.max(line.end.1);
-            for y in min_y..=max_y {
-                *counts.entry((line.start.0, y)).or_insert(0) += 1;
+            let step_x = (line.end.0 - line.start.0).signum();
+            let step_y = (line.end.1 - line.start.1).signum();
+            let mut p = line.start;
+            while p != line.end {
+                *counts.entry(p).or_insert(0) += 1;
+                p.0 += step_x;
+                p.1 += step_y;
             }
-        }
-
-        if line.start.1 == line.end.1 {
-            // Horizontal line
-            let min_x = line.start.0.min(line.end.0);
-            let max_x = line.start.0.max(line.end.0);
-            for x in min_x..=max_x {
-                *counts.entry((x, line.start.1)).or_insert(0) += 1;
-            }
-        }
+            // We need to add the end point since we stopped beforehand.
+            *counts.entry(line.end).or_insert(0) += 1;
     }
 
     counts.values().fold(0, |acc, &el| {
@@ -116,5 +109,5 @@ fn test_case() {
     let input = parse_input(input);
     // println!("Input: {:?}", input);
     assert_eq!(part1(&input), 5);
-    //assert_eq!(part2(&input), 5);
+    assert_eq!(part2(&input), 12);
 }
