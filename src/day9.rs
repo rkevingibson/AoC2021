@@ -85,10 +85,9 @@ fn part2(input: &[Vec<u8>]) -> usize {
         }
     }
 
-
     sizes.sort();
     let len = sizes.len();
-    sizes[len - 1] * sizes[len - 2] * sizes[len-3]
+    sizes[len - 1] * sizes[len - 2] * sizes[len - 3]
 }
 
 fn main() {
