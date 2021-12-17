@@ -1,5 +1,3 @@
-use std::thread::current;
-
 fn parse_input(s: &str) -> Vec<Vec<u8>> {
     s.lines()
         .map(|line| {
