@@ -57,4 +57,3 @@ path = "src/day12.rs"
 name = "day13"
 path = "src/day13.rs"
 
-[dependencies]

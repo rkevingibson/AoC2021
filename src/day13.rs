@@ -66,7 +66,7 @@ fn part1(input: &[(i32, i32)], fold: Fold) -> i32 {
 }
 
 fn part2(input: &[(i32, i32)], folds: &[Fold]) {
-    let mut result= input.to_vec();
+    let mut result = input.to_vec();
     for f in folds.iter() {
         result = do_fold(&result, *f);
     }
@@ -77,12 +77,12 @@ fn part2(input: &[(i32, i32)], folds: &[Fold]) {
     // We can create a "bitmap" of 0s and 1s.
     let &size = result.last().unwrap();
     let mut bitmap = Vec::<bool>::new();
-    bitmap.resize(((size.0 + 1)*(size.1 + 1)) as usize, false);
+    bitmap.resize(((size.0 + 1) * (size.1 + 1)) as usize, false);
     for pt in result {
-        bitmap[(pt.0 + (size.0 + 1)*pt.1) as usize] = true;
+        bitmap[(pt.0 + (size.0 + 1) * pt.1) as usize] = true;
     }
 
-    for i in 0..((size.0 + 1)*(size.1 + 1)) {
+    for i in 0..((size.0 + 1) * (size.1 + 1)) {
         if i % (size.0 + 1) == 0 {
             print!("\n");
         }

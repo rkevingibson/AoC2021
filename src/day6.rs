@@ -1,53 +1,47 @@
-fn part1(input: &[i32], days: i32) -> usize {
-    let mut state = input.to_vec();
-    for _ in 0..days {
-        let fish_count = state.len();
-        for i in 0..fish_count {
-            if state[i] == 0 {
-                state[i] = 6;
-                state.push(8);
-            } else {
-                state[i] -= 1;
-            }
-        }
-    }
+use std::time::Instant;
 
-    state.len()
+fn find_unique_window(input: &str, window_size: usize) -> usize {
+    let mut set: usize = input.as_bytes()[0..window_size - 1]
+        .iter()
+        .fold(0, |acc, &c| acc ^ 1 << (c - b'a'));
+    input
+        .as_bytes()
+        .windows(window_size)
+        .enumerate()
+        .find_map(|(index, win)| {
+            set ^= 1 << (win.last().unwrap() - b'a');
+            if set.count_ones() == window_size.try_into().unwrap() {
+                return Some(index + window_size);
+            }
+            set ^= 1 << (win.first().unwrap() - b'a');
+            return None;
+        })
+        .unwrap()
 }
 
-fn part2(input: &[i32], days: i32) -> usize {
-    // Part 1 works but is too slow for 256 days - can't brute force it, memory grows too much.
-    // Need to be cleverer about how quickly it grows.
-    // Could represent it "sparsely" - only have values from 0 to 8, so an array of 9 entries with a count of how many fish are in each stage.
-    // Updating is then a bit of logic but nothing too hard.
-    let mut state: [usize; 9] = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-    for &ele in input {
-        state[ele as usize] += 1;
-    }
+fn part1(input: &str) -> usize {
+    find_unique_window(input, 4)
+}
 
-    for _ in 0..days {
-        state.rotate_left(1);
-        state[6] += state[8];
-    }
-
-    state.iter().sum()
+fn part2(input: &str) -> usize {
+    find_unique_window(input, 14)
 }
 
 fn main() {
     let input = include_str!("../inputs/day6.txt");
-    let input: Vec<i32> = input
-        .split(',')
-        .map(|s| s.parse::<i32>().unwrap())
-        .collect();
-    // Parse input here
-    println!("Part 1: {}", part1(&input, 80));
-    println!("Part 2: {}", part2(&input, 256));
+
+    let now = Instant::now();
+    let p1 = part1(input);
+    let p2 = part2(input);
+    let dur = now.elapsed();
+    println!("Part 1: {}", p1);
+    println!("Part 2: {}", p2);
+    println!("Duration: {:?}", dur);
 }
 
 #[test]
 fn test_case() {
-    let input = vec![3, 4, 3, 1, 2];
-    assert_eq!(part1(&input, 18), 26);
-    assert_eq!(part1(&input, 80), 5934);
-    assert_eq!(part2(&input, 256), 26984457539);
+    assert_eq!(part1("mjqjpqmgbljsphdztnvjfqwrcgsmlb"), 7);
+    assert_eq!(part1("bvwbjplbgvbhsrlpgdmjqwftvncz"), 5);
+    assert_eq!(part1("nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg"), 10);
 }
