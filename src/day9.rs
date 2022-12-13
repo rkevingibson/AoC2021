@@ -1,109 +1,68 @@
-fn parse_input(s: &str) -> Vec<Vec<u8>> {
-    s.lines()
-        .map(|line| {
-            line.trim()
-                .chars()
-                .map(|c| c.to_digit(10).unwrap() as u8)
-                .collect()
-        })
-        .collect()
+use std::collections::HashSet;
+use std::time::Instant;
+
+fn special_distance(a: (i32, i32), b: (i32, i32)) -> i32 {
+    (a.0 - b.0).abs().max((a.1 - b.1).abs())
 }
 
-fn part1(input: &[Vec<u8>]) -> i32 {
-    let mut risk_level: i32 = 0;
-    let rows = input.len();
-    for r in 0..rows {
-        let cols = input[r].len();
-        for c in 0..cols {
-            // Can safely get, then unwrap with a default hi value to make the test pass
-            let up = if r > 0 { input[r - 1][c] } else { 10 };
-            let down = input.get(r + 1).map_or(10, |row| row[c]);
-            let left = if c > 0 { input[r][c - 1] } else { 10 };
-            let &right = input[r].get(c + 1).unwrap_or(&10);
-            let x = input[r][c];
-            if x < up && x < down && x < left && x < right {
-                risk_level += x as i32 + 1;
+fn rope_simulation(input: &str, rope_length: usize) -> usize {
+    let mut tail_pos_history: HashSet<(i32, i32)> = HashSet::new();
+
+    let mut head_pos = (0, 0);
+    let mut tail_pos = (0, 0);
+    tail_pos_history.insert(tail_pos);
+
+    let mut rope_positions = vec![(0, 0); rope_length];
+
+    for line in input.lines() {
+        let (dir, count) = line.split_at(2);
+        let dir = dir.as_bytes()[0]; // We know dir is a single ascii character
+        let count = count.parse::<i32>().expect("Invalid count");
+
+        let dir: (i32, i32) = match dir {
+            b'R' => (1, 0),
+            b'U' => (0, 1),
+            b'L' => (-1, 0),
+            b'D' => (0, -1),
+            _ => panic!("Bad direction"),
+        };
+
+        for t in 1..=count {
+            let pos = (head_pos.0 + t * dir.0, head_pos.1 + t * dir.1);
+
+            if special_distance(pos, tail_pos) <= 1 {
+                // No movement needed from the tail
+            } else {
+                // Need to move tail to keep up.
+                // The tail's next position is always pos - dir
+                let next_tail_pos = (pos.0 - dir.0, pos.1 - dir.1);
+                tail_pos_history.insert(next_tail_pos);
+                tail_pos = next_tail_pos;
             }
         }
+
+        head_pos = (head_pos.0 + count * dir.0, head_pos.1 + count * dir.1);
     }
-    risk_level
+
+    tail_pos_history.len()
 }
 
-fn part2(input: &[Vec<u8>]) -> usize {
-    let mut basin_ids: Vec<Vec<Option<u32>>> = Vec::new();
-    basin_ids.resize_with(input.len(), || {
-        let mut v = Vec::<Option<u32>>::new();
-        v.resize_with(input[0].len(), || None);
-        v
-    });
+fn part1(input: &str) -> usize {
+    rope_simulation(input, 1)
+}
 
-    let mut stack: Vec<(usize, usize)> = Vec::new();
-    let size_x = input.len();
-    let size_y = input[0].len();
-
-    let mut basin_count = 0;
-
-    let mut sizes = Vec::<usize>::new();
-
-    for col in 0..size_x {
-        for row in 0..size_y {
-            if basin_ids[col][row].is_none() {
-                basin_ids[col][row] = Some(basin_count);
-                sizes.push(0);
-                stack.push((col, row));
-                basin_count += 1;
-            }
-
-            while let Some((x, y)) = stack.pop() {
-                let current_id = basin_ids[x][y].unwrap();
-                if x >= 1 && basin_ids[x - 1][y].is_none() && input[x - 1][y] != 9 {
-                    basin_ids[x - 1][y] = Some(current_id);
-                    sizes[current_id as usize] += 1;
-                    stack.push((x - 1, y));
-                }
-
-                if x + 1 < size_x && basin_ids[x + 1][y].is_none() && input[x + 1][y] != 9 {
-                    basin_ids[x + 1][y] = Some(current_id);
-                    sizes[current_id as usize] += 1;
-                    stack.push((x + 1, y));
-                }
-
-                if y >= 1 && basin_ids[x][y - 1].is_none() && input[x][y - 1] != 9 {
-                    basin_ids[x][y - 1] = Some(current_id);
-                    sizes[current_id as usize] += 1;
-                    stack.push((x, y - 1));
-                }
-
-                if y + 1 < size_y && basin_ids[x][y + 1].is_none() && input[x][y + 1] != 9 {
-                    basin_ids[x][y + 1] = Some(current_id);
-                    sizes[current_id as usize] += 1;
-                    stack.push((x, y + 1));
-                }
-            }
-        }
-    }
-
-    sizes.sort();
-    let len = sizes.len();
-    sizes[len - 1] * sizes[len - 2] * sizes[len - 3]
+fn part2(input: &str) -> usize {
+    rope_simulation(input, 9)
 }
 
 fn main() {
     let input = include_str!("../inputs/day9.txt");
-    let input = parse_input(input);
-    println!("Part 1: {}", part1(&input));
-    println!("Part 2: {}", part2(&input));
-}
+    let now = Instant::now();
+    let p1 = part1(input);
+    let p2 = part2(input);
+    let dur = now.elapsed();
 
-#[test]
-fn test_case() {
-    let input = r#"2199943210
-    3987894921
-    9856789892
-    8767896789
-    9899965678"#;
-    let input = parse_input(input);
-    println!("{:?}", input);
-    assert_eq!(part1(&input), 15);
-    assert_eq!(part2(&input), 1134);
+    println!("Part 1: {}", p1);
+    println!("Part 2: {}", p2);
+    println!("Duration: {:?}", dur);
 }
